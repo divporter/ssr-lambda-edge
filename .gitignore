@@ -7,4 +7,3 @@ static/node_modules
 static/.env
 static/.nvmrc
 static/deploy.sh
-static/webpack*
