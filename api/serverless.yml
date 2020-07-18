@@ -1,0 +1,35 @@
+service: ssr-lambda-edge-api
+
+provider:
+  name: aws
+  runtime: python3.7
+  region: ap-southeast-2
+  stage: api
+
+functions:
+  api:
+    handler: wsgi_handler.handler
+    events:
+      - http: 
+          method: ANY 
+          path: /
+          cors: true
+      - http: 
+          method: ANY
+          path: /{proxy+}
+          cors: true
+
+resources:
+  Outputs:
+    ApiGatewayRestApiId:
+      Value: 
+        Ref: ApiGatewayRestApi
+      Export:
+        Name: SsrLambdaEdgeApiApiGatewayRestApiId
+
+plugins:
+  - serverless-wsgi
+
+custom:
+  wsgi:
+    app: app.app

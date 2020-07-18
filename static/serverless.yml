@@ -1,0 +1,123 @@
+service: ssr-lambda-edge-ssr # NOTE: update this with your service name
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  region: us-east-1
+  stage: edge
+
+package:
+  include:
+    - ssr/dist/**
+    - ssr/index.html
+    - ssr/index.js
+    - node_modules/**
+  exclude:
+    - ./**
+
+functions:
+  ssr:
+    handler: ssr/index.handler
+    memorySize: 2048
+    timeout: 30
+    lambdaAtEdge:
+      distribution: 'CloudFrontDistribution'
+      eventType: 'origin-request'
+      pathPattern: '*'
+    
+resources:
+  Resources:
+    CloudFrontIdentity:
+      Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+      Properties:
+        CloudFrontOriginAccessIdentityConfig:
+          Comment: 'cf-accessidentity'
+    CloudFrontDistribution:
+      Type: 'AWS::CloudFront::Distribution'
+      Properties:
+        DistributionConfig:
+          DefaultCacheBehavior:
+            ForwardedValues:
+              QueryString: true
+              Cookies:
+                Forward: 'none'
+            TargetOriginId: 'S3'
+            Compress: true
+            ViewerProtocolPolicy: 'redirect-to-https'
+            MaxTTL: 86400
+          DefaultRootObject: 'index.html'
+          HttpVersion: 'http2'
+          Enabled: true
+          IPV6Enabled: true
+          PriceClass: 'PriceClass_All'
+          Comment: 'ssr-lambda-edge'
+          # ViewerCertificate:
+          #   AcmCertificateArn: 'arn:aws:acm:us-east-1:429445097493:certificate/108b7971-869c-4502-80e8-82ea9b782096'
+          #   SslSupportMethod: 'sni-only'
+          CacheBehaviors:
+            - AllowedMethods:
+              - GET
+              - OPTIONS
+              - HEAD
+              PathPattern: '/api/*'
+              TargetOriginId: 'API'
+              ViewerProtocolPolicy: 'redirect-to-https'
+              ForwardedValues:
+                Headers:
+                  - 'Content-Type'
+                QueryString: 'true'
+                Cookies:
+                  Forward: 'none'
+              DefaultTTL: 21600
+              MaxTTL: 21600
+            - AllowedMethods:
+                - GET
+                - HEAD
+              PathPattern: '*'
+              TargetOriginId: 'S3'
+              Compress: true
+              ViewerProtocolPolicy: 'redirect-to-https'
+              ForwardedValues:
+                Headers:
+                  - 'User-Agent'
+                QueryString: 'false'
+                Cookies:
+                  Forward: 'none'
+              MaxTTL: 2592000
+              DefaultTTL: 172800
+
+          Origins:
+            - DomainName: ${opt:API_ID}.execute-api.ap-southeast-2.amazonaws.com
+              CustomOriginConfig:
+                OriginProtocolPolicy: 'https-only'
+              Id: 'API'
+            - DomainName: 'ssr-lambda-edge.s3.amazonaws.com'
+              S3OriginConfig:
+                OriginAccessIdentity:
+                  Fn::Sub:
+                    'origin-access-identity/cloudfront/#{CloudFrontIdentity}'
+              Id: 'S3'
+          CustomErrorResponses:
+            - ErrorCode: 403
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+              ErrorCachingMinTTL: 5
+          Logging:
+            Bucket: 'ssr-lambda-edge-log.s3.amazonaws.com'
+            Prefix: 'ssr-lambda-edge/'
+
+    MyS3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: 'ssr-lambda-edge'
+        PolicyDocument:
+          Statement:
+            Effect: "Allow"
+            Principal:
+              AWS: "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity #{CloudFrontIdentity}"
+            Action: "s3:GetObject"
+            Resource: "arn:aws:s3:::ssr-lambda-edge/*"
+
+plugins:
+  - 'serverless-cf-vars'
+  - '@silvermine/serverless-plugin-cloudfront-lambda-edge'

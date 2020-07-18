@@ -1,0 +1,11 @@
+api/node_modules
+api/.serverless
+api/.requirements
+api/venv
+static/.serverless
+static/node_modules
+static/src
+static/.env
+static/.nvmrc
+static/deploy.sh
+static/webpack*
