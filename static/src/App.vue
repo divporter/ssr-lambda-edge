@@ -35,7 +35,6 @@ export default {
         method: "GET",
         url: `${process.env.API_URL}/animals`
       })
-      console.log(resp)
       this.animals = resp.data
     }
   },

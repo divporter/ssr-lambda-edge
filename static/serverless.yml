@@ -51,9 +51,6 @@ resources:
           IPV6Enabled: true
           PriceClass: 'PriceClass_All'
           Comment: 'ssr-lambda-edge'
-          # ViewerCertificate:
-          #   AcmCertificateArn: 'arn:aws:acm:us-east-1:429445097493:certificate/108b7971-869c-4502-80e8-82ea9b782096'
-          #   SslSupportMethod: 'sni-only'
           CacheBehaviors:
             - AllowedMethods:
               - GET
@@ -91,6 +88,7 @@ resources:
               CustomOriginConfig:
                 OriginProtocolPolicy: 'https-only'
               Id: 'API'
+            # Add your S3 Bucket here
             - DomainName: 'ssr-lambda-edge.s3.amazonaws.com'
               S3OriginConfig:
                 OriginAccessIdentity:
@@ -103,6 +101,7 @@ resources:
               ResponsePagePath: /index.html
               ErrorCachingMinTTL: 5
           Logging:
+            # Add your logging bucket here
             Bucket: 'ssr-lambda-edge-log.s3.amazonaws.com'
             Prefix: 'ssr-lambda-edge/'
 

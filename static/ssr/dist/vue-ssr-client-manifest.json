@@ -2,10 +2,10 @@
   "publicPath": "/",
   "all": [
     "index.html",
-    "static/js/main.d71f5722.js"
+    "static/js/main.ce1a93fb.js"
   ],
   "initial": [
-    "static/js/main.d71f5722.js"
+    "static/js/main.ce1a93fb.js"
   ],
   "async": [],
   "modules": {
