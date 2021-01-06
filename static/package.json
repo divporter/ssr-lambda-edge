@@ -14,7 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "es6-crawler-detect": "^3.1.2",
     "html-minifier": "^4.0.0",
     "vue": "^2.6.11",
